@@ -9,6 +9,7 @@ import { slugify } from '~/utils/formatters'
 import { boardModel } from '~/models/boardModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
+import { cloneDeep } from 'lodash'
 
 const createNew = async (reqBody) => {
   try {
@@ -44,7 +45,20 @@ const getDetails = async (boardId) => {
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
     }
-    return board
+
+    // deep clone để tạo ra cái mới để xử lý, không ảnh hưởng board ban đầu (tùy mục đích dự án mà cần bước này hay không)
+    const resBoard = cloneDeep(board)
+    // Đưa cards vào đúng columns
+    resBoard.columns.forEach(column => {
+      // ObjectId trong mongoDB có support method equals để so sánh
+      column.cards = resBoard.cards.filter(card => card.columnId.equals(column._id))
+
+      // column.cards = resBoard.cards.filter(card => card.columnId.toString() === column._id.toString())
+    })
+    // Xóa trường cards ở resBoard
+    delete resBoard.cards
+
+    return resBoard
   } catch (error) { throw error }
 }
 
