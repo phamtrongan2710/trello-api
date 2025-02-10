@@ -5,7 +5,7 @@
  */
 
 import { StatusCodes } from 'http-status-codes'
-import { boardService } from '../services/boardService.js'
+import { boardService } from '~/services/boardService.js'
 
 const createNew = async (req, res, next) => {
   try {
