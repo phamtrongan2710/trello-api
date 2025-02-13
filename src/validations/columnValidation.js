@@ -26,7 +26,7 @@ const update = async (req, res, next) => {
     title: Joi.string().min(3).max(50).trim().strict(),
     cardOrderIds: Joi.array().items(
       Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
-    ).default([])
+    )
   })
 
   try {
