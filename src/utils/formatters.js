@@ -1,3 +1,5 @@
+import { pick } from 'lodash'
+
 /**
  * Simple method to Convert a String to Slug
  * Các bạn có thể tham khảo thêm kiến thức liên quan ở đây: https://byby.dev/js-slugify-string
@@ -13,4 +15,20 @@ export const slugify = (val) => {
     .replace(/[^a-z0-9 -]/g, '') // remove non-alphanumeric characters
     .replace(/\s+/g, '-') // replace spaces with hyphens
     .replace(/-+/g, '-') // remove consecutive hyphens
+}
+
+// Lấy một vài dữ liệu cụ thể trong User để tránh việc trả về các dữ liệu nhạy cảm như hash password
+export const pickUser = (user) => {
+  if (!user) return {}
+  return pick(user, [
+    '_id',
+    'email',
+    'username',
+    'displayName',
+    'avatar',
+    'role',
+    'isActive',
+    'createdAt',
+    'updatedAt'
+  ])
 }
