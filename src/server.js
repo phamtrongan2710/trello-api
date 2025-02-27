@@ -13,10 +13,24 @@ import { env } from '~/config/environment'
 import { APIs_v1 } from '~/routes/v1'
 import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
 import { corsOptions } from './config/cors'
+import cookieParser from 'cookie-parser'
 
 const START_SERVER = () => {
   const app = express()
 
+  /**
+   * Fix cache from disk của expressJs
+   * https://stackoverflow.com/questions/22632593/how-to-disable-webpage-caching-in-expressjs-nodejs/53240717#53240717
+   */
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store')
+    next()
+  })
+
+  // Cấu hình cookie parser
+  app.use(cookieParser())
+
+  // Xử lý cors
   app.use(cors(corsOptions))
 
   // Enable req.body json data
