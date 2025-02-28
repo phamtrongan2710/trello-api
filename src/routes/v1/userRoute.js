@@ -13,4 +13,10 @@ Router.route('/verify')
 Router.route('/login')
   .post(userValidation.login, userController.login)
 
+Router.route('/logout')
+  .delete(userController.logout) // có thể để get
+
+Router.route('/refresh_token')
+  .get(userController.refreshToken)
+
 export const userRoute = Router
