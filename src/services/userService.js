@@ -86,15 +86,15 @@ const login = async (reqBody) => {
     const accessToken = await JwtProvider.generateToken(
       userInfo,
       env.ACCESS_TOKEN_SECRET_SIGNATURE,
-      5
-      // env.ACCESS_TOKEN_LIFE
+      // 5
+      env.ACCESS_TOKEN_LIFE
     )
 
     const refreshToken = await JwtProvider.generateToken(
       userInfo,
       env.REFRESH_TOKEN_SECRET_SIGNATURE,
-      10
-      //env.REFRESH_TOKEN_LIFE
+      // 10
+      env.REFRESH_TOKEN_LIFE
     )
 
     // Trả về thông tin user và 2 token vừa tạo
@@ -118,11 +118,43 @@ const refreshToken = async (clientRefreshToken) => {
     const accessToken = await JwtProvider.generateToken(
       userInfo,
       env.ACCESS_TOKEN_SECRET_SIGNATURE,
-      5
-      // env.ACCESS_TOKEN_LIFE
+      // 5
+      env.ACCESS_TOKEN_LIFE
     )
 
     return { accessToken }
+  } catch (error) { throw error }
+}
+
+const update = async (userId, reqBody) => {
+  try {
+    // Query user và kiểm tra cho chắc chắn
+    const existedUser = await userModel.findOneById(userId)
+    if (!existedUser) throw new ApiError(StatusCodes.NOT_FOUND, 'Account is not found!')
+    if (!existedUser.isActive) throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Account is not active!')
+
+    // Khởi tạo kết quả update user ban đầu là empty
+    let updatedUser = {}
+
+    // Trường hợp change password
+    if (reqBody.current_password && reqBody.new_password) {
+      // Kiểm tra xem current_password đúng hay không
+      if (!bcryptjs.compareSync(reqBody.current_password, existedUser.password)) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Current password is incorrect!')
+      }
+
+      // Nếu current_password đúng thì chúng ta hash mật khẩu mới và update vào database
+      updatedUser = await userModel.update(userId, {
+        password: bcryptjs.hashSync(reqBody.new_password, 8)
+      })
+
+    } else {
+      // Trường hợp update các thông tin chung ví dụ như displayName
+      updatedUser = await userModel.update(userId, reqBody)
+    }
+
+    return pickUser(updatedUser)
+
   } catch (error) { throw error }
 }
 
@@ -130,5 +162,6 @@ export const userService = {
   createNew,
   verifyAccount,
   login,
-  refreshToken
+  refreshToken,
+  update
 }
