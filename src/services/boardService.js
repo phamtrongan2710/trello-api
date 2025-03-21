@@ -12,7 +12,8 @@ import { cloneDeep } from 'lodash'
 import { columnModel } from '~/models/columnModel'
 import { cardModel } from '~/models/cardModel'
 import { DEFAULT_ITEMS_PER_PAGE, DEFAULT_PAGE } from '~/utils/constants'
-const createNew = async (reqBody) => {
+
+const createNew = async (userId, reqBody) => {
   try {
     // Xử lý logic dữ liệu tùy đặc thù dự án
     const newBoardData = {
@@ -27,7 +28,7 @@ const createNew = async (reqBody) => {
         insertedId: id của bản ghi vừa tạo mới
       }
     */
-    const result = await boardModel.createNew(newBoardData)
+    const result = await boardModel.createNew(userId, newBoardData)
 
     // Lấy bản ghi board vừa tạo (tùy mục đích dự án mà cần bước này hay không)
     const createdBoard = await boardModel.findOneById(result.insertedId)
@@ -40,9 +41,9 @@ const createNew = async (reqBody) => {
   } catch (error) { throw error }
 }
 
-const getDetails = async (boardId) => {
+const getDetails = async (userId, boardId) => {
   try {
-    const board = await boardModel.getDetails(boardId)
+    const board = await boardModel.getDetails(userId, boardId)
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
     }
