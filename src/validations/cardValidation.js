@@ -19,6 +19,25 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const update = async (req, res, next) => {
+  // Lưu ý: không dùng hàm required() trong truờng hợp update
+  const correctCondition = Joi.object({
+    title: Joi.string().min(3).max(50).trim().strict(),
+    description: Joi.string().optional()
+  })
+
+  try {
+    // set abortEarly: false để trả về tất cả lỗi
+    // đối với update, cho phép unknown để không cần đẩy một số field lên
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
+  }
+}
+
 export const cardValidation = {
-  createNew
+  createNew,
+  update
 }
