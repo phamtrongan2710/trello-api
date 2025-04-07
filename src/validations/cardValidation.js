@@ -29,7 +29,7 @@ const update = async (req, res, next) => {
   try {
     // set abortEarly: false để trả về tất cả lỗi
     // đối với update, cho phép unknown để không cần đẩy một số field lên
-    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    await correctCondition.validateAsync(req.body, { abortEarly: false, allowUnknown: true })
     next()
 
   } catch (error) {
