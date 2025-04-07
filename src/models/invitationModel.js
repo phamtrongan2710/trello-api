@@ -3,6 +3,8 @@ import { ObjectId } from 'mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { GET_DB } from '~/config/mongodb'
 import { INVITATION_TYPES, BOARD_INVITATION_STATUS } from '~/utils/constants'
+import { userModel } from '~/models/userModel'
+import { boardModel } from '~/models/boardModel'
 
 const INVITATION_COLLECTION_NAME = 'invitations'
 const INVITATION_COLLECTION_SCHEMA = Joi.object({
@@ -77,10 +79,63 @@ const update = async (invitationId, updateData) => {
   } catch (error) { throw new Error(error) }
 }
 
+
+const findByUserId = async (userId) => {
+  try {
+    const queryConditions = [
+      { inviteeId: new ObjectId(userId) },
+      { _destroy: false }
+    ]
+
+    const results = await GET_DB().collection(INVITATION_COLLECTION_NAME).aggregate([
+      { $match: { $and: queryConditions } },
+      {
+        $lookup: {
+          from: userModel.USER_COLLECTION_NAME,
+          localField: 'inviterId',
+          foreignField: '_id',
+          as: 'inviter',
+          pipeline: [{
+            $project: {
+              'password': 0,
+              'verifyToken': 0
+            }
+          }]
+        }
+      },
+      {
+        $lookup: {
+          from: userModel.USER_COLLECTION_NAME,
+          localField: 'inviteeId',
+          foreignField: '_id',
+          as: 'invitee',
+          pipeline: [{
+            $project: {
+              'password': 0,
+              'verifyToken': 0
+            }
+          }]
+        }
+      },
+      {
+        $lookup: {
+          from: boardModel.BOARD_COLLECTION_NAME,
+          localField: 'boardInvitation.boardId',
+          foreignField: '_id',
+          as: 'board'
+        }
+      }
+    ]).toArray()
+
+    return results
+  } catch (error) { throw new Error(error) }
+}
+
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
   createNewBoardInvitation,
   findOneById,
-  update
+  update,
+  findByUserId
 }
