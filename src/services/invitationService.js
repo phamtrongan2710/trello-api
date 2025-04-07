@@ -16,9 +16,9 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
     const board = await boardModel.findOneById(reqBody.boardId)
 
     // Không được mời chính mình
-    if (inviter._id.toString() === invitee._id.toString()) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'You cannot invite yourself!')
-    }
+    // if (inviter._id.toString() === invitee._id.toString()) {
+    //   throw new ApiError(StatusCodes.BAD_REQUEST, 'You cannot invite yourself!')
+    // }
 
     // Nếu không tồn tại 1 trong 3 thì reject
     if (!inviter || !invitee || !board) {
@@ -55,7 +55,27 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
   }
 }
 
+const getInvitations = async (userId) => {
+  try {
+    const invitations = await invitationModel.findByUserId(userId)
+
+    // dữ liệu invitee, inviter, board đang trả về là mảng 1 phần tử nếu lấy ra được nên chúng ta sẽ chuyển về object trước khi chuyển về cho FE
+    const resInvitations = invitations.map(i => {
+      return {
+        ...i,
+        board: i.board[0] || null,
+        inviter: i.inviter[0] || null,
+        invitee: i.invitee[0] || null
+      }
+    })
+
+    return resInvitations
+  } catch (error) {
+    throw error
+  }
+}
 
 export const invitationService = {
-  createNewBoardInvitation
+  createNewBoardInvitation,
+  getInvitations
 }
