@@ -70,7 +70,7 @@ const update = async (invitationId, updateData) => {
       updateData.boardInvitation.boardId = new ObjectId(updateData.boardInvitation.boardId)
     }
 
-    const result = await GET_DB().collection(INVITATION_COLLECTION_NAME).findOneAnđUpate(
+    const result = await GET_DB().collection(INVITATION_COLLECTION_NAME).findOneAndUpdate(
       { _id: new ObjectId(invitationId) },
       { $set: updateData },
       { returnDocument: 'after' }

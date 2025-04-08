@@ -75,7 +75,56 @@ const getInvitations = async (userId) => {
   }
 }
 
+const updateBoardInvitation = async (userId, status, invitationId) => {
+  try {
+    const invitation = await invitationModel.findOneById(invitationId)
+
+    // Nếu không tìm thấy invitation thì trả về lỗi
+    if (!invitation) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Invitation not found!')
+    }
+
+    // Nếu người dùng không phải là người được mời thì trả về lỗi
+    if (invitation.inviteeId.toString() !== userId) {
+      throw new ApiError(StatusCodes.FORBIDDEN, 'You are not allowed to update this invitation!')
+    }
+
+    // Nếu tìm không thấy board thì trả về lỗi
+    const board = await boardModel.findOneById(invitation.boardInvitation.boardId)
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
+    }
+
+    // Kiểm tra xem nếu status là accepted mà invitee đã là owner hoặc member của board thì trả về thông báo lỗi luôn
+    // Note: 2 mảng memberIds và ownerIds của board đang là kiểu dữ liệu objectId nên cho nó về string hết để check
+    const boardOwnerAndMemberIds = [...board.ownerIds, ...board.memberIds].toString()
+    if (status === BOARD_INVITATION_STATUS.ACCEPTED && boardOwnerAndMemberIds.includes(userId)) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'You are already a member or owner of this board!')
+    }
+
+    const updateData = {
+      boardInvitation: {
+        ...invitation.boardInvitation,
+        status: status
+      }
+    }
+
+    // Buớc 1: Cập nhật trạng thái của invitation
+    // Bước 2: Nếu trường hợp accept một lời mời thành công thì thêm thông tin user vào trong memberIds của board
+    const updatedInvitation = await invitationModel.update(invitationId, updateData)
+
+    if (updatedInvitation.boardInvitation?.status === BOARD_INVITATION_STATUS.ACCEPTED) {
+      await boardModel.pushMemberIds(board._id.toString(), userId)
+    }
+
+    return updatedInvitation
+  } catch (error) {
+    throw error
+  }
+}
+
 export const invitationService = {
   createNewBoardInvitation,
-  getInvitations
+  getInvitations,
+  updateBoardInvitation
 }
